@@ -69,6 +69,7 @@
       box-shadow: 0 6px 18px rgba(2,6,23,0.45);
       position:absolute;
       white-space:nowrap;
+      touch-action: manipulation;
     }
 
     .btn:active {transform:scale(0.98);}
@@ -162,15 +163,25 @@
       }
     });
 
-    // Pointer down: teleport only when not a touch pointer (prevents accidental teleports on phones)
-    no.addEventListener("pointerdown", (e) => {
-      if (e.pointerType === 'touch') {
-        // Ignore touch taps on mobile to avoid accidental teleporting.
-        // If you want touch behavior, we could implement double-tap or long-press logic instead.
-        return;
-      }
-      e.stopPropagation();
+    // Teleport on pointerdown for all pointer types (includes touch on phones).
+    // Use a short lock to avoid multiple teleports from one gesture.
+    let _teleportLock = false;
+    function doTeleport(e){
+      if (_teleportLock) return;
+      _teleportLock = true;
+      try {
+        e && e.preventDefault();
+      } catch(_){}
       smoothTeleport();
+      // small tactile feedback for touch devices
+      if (e && e.pointerType === 'touch' && navigator.vibrate) navigator.vibrate(20);
+      setTimeout(()=> _teleportLock = false, 300);
+    }
+
+    no.addEventListener('pointerdown', (e) => {
+      // allow touch and mouse to trigger teleport on click/tap
+      e.stopPropagation();
+      doTeleport(e);
     });
 
     yes.addEventListener("click", () => {
