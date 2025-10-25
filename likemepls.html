@@ -1,9 +1,9 @@
-<<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Yes / No Teleport Game</title>
+  <title>Yes / No — do you like me?</title>
   <style>
     :root {
       --bg: linear-gradient(135deg,#0f172a,#0b1220);
@@ -65,7 +65,7 @@
       cursor:pointer;
       font-weight:700;
       user-select:none;
-      transition: transform 220ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms, opacity 160ms;
+      transition: transform 220ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms, opacity 160ms, left 420ms cubic-bezier(.2,.9,.3,1), top 420ms cubic-bezier(.2,.9,.3,1);
       box-shadow: 0 6px 18px rgba(2,6,23,0.45);
       position:absolute;
       white-space:nowrap;
@@ -85,9 +85,10 @@
     }
 
     .no {
-      right:20%;
-      top:30%;
-      transform:translate(0,0);
+      /* initial placement overridden by JS on load */
+      left:75%;
+      top:35%;
+      transform:translate(-50%,-50%);
       background:linear-gradient(90deg,#ef4444,#dc2626);
       color:#fff;
       min-width:90px;
@@ -107,15 +108,15 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>Quick question...</h1>
-      <p>Click "Yes" if you like them — try to catch the "No" button if you can 😏</p>
+      <h1>Quick question..</h1>
+      <p>Click "Yes" if you like me!! — try to catch the "No" button if you can 😏</p>
 
       <div id="stage" class="stage">
         <button id="yesBtn" class="btn yes grow">YES</button>
         <button id="noBtn" class="btn no">NO</button>
       </div>
 
-      <div class="help">Tip: the No button teleports when clicked — and each time, the YES button gets bigger!</div>
+      <div class="help">Tip: just give me a chance pls </div>
     </div>
   </div>
 
@@ -130,35 +131,80 @@
       return Math.max(a, Math.min(b, n));
     }
 
-    function randomTeleport() {
+    // Smooth teleport: compute a target inside the stage and set left/top — CSS transition animates it.
+    function smoothTeleport() {
       const rect = stage.getBoundingClientRect();
+      // padding from edges so button stays visible
+      const pad = 60; // px
+      const minX = pad;
+      const maxX = rect.width - pad;
+      const minY = pad;
+      const maxY = rect.height - pad;
 
-      const randX = Math.random() * (rect.width - 100) + 50;
-      const randY = Math.random() * (rect.height - 100) + 50;
+      const randX = Math.random() * (maxX - minX) + minX;
+      const randY = Math.random() * (maxY - minY) + minY;
 
+      // Apply new coordinates relative to the stage (use px values measured from stage's left/top)
       no.style.left = randX + "px";
       no.style.top = randY + "px";
+      // Ensure centered transform is applied (so left/top is center)
       no.style.transform = "translate(-50%, -50%)";
 
-      yesScale = clamp(yesScale + 0.15, 1, 2.3);
+      // Give visual feedback by scaling YES button smoothly
+      yesScale = clamp(yesScale + 0.12, 1, 2.3);
       yes.style.transform = `translate(-50%, -50%) scale(${yesScale})`;
     }
 
-    no.addEventListener("click", (e) => {
+    // Desktop: teleport on mouse hover only (pointerenter with pointerType check)
+    no.addEventListener("pointerenter", (e) => {
+      if (e.pointerType === 'mouse') {
+        smoothTeleport();
+      }
+    });
+
+    // Pointer down: teleport only when not a touch pointer (prevents accidental teleports on phones)
+    no.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === 'touch') {
+        // Ignore touch taps on mobile to avoid accidental teleporting.
+        // If you want touch behavior, we could implement double-tap or long-press logic instead.
+        return;
+      }
       e.stopPropagation();
-      randomTeleport();
+      smoothTeleport();
     });
 
     yes.addEventListener("click", () => {
       alert("Awww, you said YES 💖");
     });
 
-    window.addEventListener("load", () => {
+    // Place buttons correctly inside the stage on load and on resize
+    function placeInitial() {
       const rect = stage.getBoundingClientRect();
       yes.style.left = rect.width * 0.5 + "px";
       yes.style.top = rect.height * 0.6 + "px";
       no.style.left = rect.width * 0.75 + "px";
       no.style.top = rect.height * 0.35 + "px";
+    }
+
+    window.addEventListener("load", placeInitial);
+    window.addEventListener("resize", () => {
+      // keep buttons inside stage when resizing: clamp positions
+      const rect = stage.getBoundingClientRect();
+      ['left','top'].forEach((prop) => {
+        const val = parseFloat(getComputedStyle(no)[prop]);
+        if (!isNaN(val)) {
+          if (prop === 'left') {
+            const clamped = Math.max(50, Math.min(val, rect.width - 50));
+            no.style.left = clamped + 'px';
+          } else {
+            const clamped = Math.max(50, Math.min(val, rect.height - 50));
+            no.style.top = clamped + 'px';
+          }
+        }
+      });
+      // re-center yes
+      yes.style.left = rect.width * 0.5 + "px";
+      yes.style.top = rect.height * 0.6 + "px";
     });
   </script>
 </body>
