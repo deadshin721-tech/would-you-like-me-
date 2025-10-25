@@ -1,0 +1,165 @@
+<<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yes / No Teleport Game</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg,#0f172a,#0b1220);
+      --card: rgba(255,255,255,0.04);
+      --accent: #7c3aed;
+      --muted: rgba(255,255,255,0.7);
+    }
+    html,body {
+      height:100%;
+      margin:0;
+      font-family:Inter,system-ui,Arial;
+      background:var(--bg);
+      color:#fff;
+    }
+
+    .wrap {
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:40px;
+      box-sizing:border-box;
+    }
+
+    .card {
+      background:var(--card);
+      backdrop-filter: blur(6px);
+      border-radius:16px;
+      padding:28px 32px;
+      text-align:center;
+      box-shadow:0 8px 30px rgba(2,6,23,0.6);
+      max-width:820px;
+      width:100%;
+      position:relative;
+    }
+
+    h1 {font-size:24px;margin:0 0 6px;}
+    p {color:var(--muted);margin:0 0 18px;}
+
+    .stage {
+      position:relative;
+      height:340px;
+      border-radius:12px;
+      border:1px dashed rgba(255,255,255,0.04);
+      overflow:hidden;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px 18px;
+      border-radius:10px;
+      border:0;
+      cursor:pointer;
+      font-weight:700;
+      user-select:none;
+      transition: transform 220ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms, opacity 160ms;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+      position:absolute;
+      white-space:nowrap;
+    }
+
+    .btn:active {transform:scale(0.98);}
+
+    .yes {
+      left:50%;
+      top:60%;
+      transform:translate(-50%,-50%);
+      background:linear-gradient(90deg,#34d399,#10b981);
+      color:#042;
+      min-width:90px;
+      font-size:16px;
+      padding:14px 20px;
+    }
+
+    .no {
+      right:20%;
+      top:30%;
+      transform:translate(0,0);
+      background:linear-gradient(90deg,#ef4444,#dc2626);
+      color:#fff;
+      min-width:90px;
+      font-size:16px;
+      padding:14px 20px;
+    }
+
+    .grow {transition: transform 300ms cubic-bezier(.2,.9,.3,1);transform-origin:center center;}
+    .help {font-size:13px;color:rgba(255,255,255,0.6);margin-top:14px;}
+
+    @media (max-width:600px){
+      .stage{height:60vh;}
+      .yes,.no{font-size:15px;padding:12px 14px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Quick question...</h1>
+      <p>Click "Yes" if you like them — try to catch the "No" button if you can 😏</p>
+
+      <div id="stage" class="stage">
+        <button id="yesBtn" class="btn yes grow">YES</button>
+        <button id="noBtn" class="btn no">NO</button>
+      </div>
+
+      <div class="help">Tip: the No button teleports when clicked — and each time, the YES button gets bigger!</div>
+    </div>
+  </div>
+
+  <script>
+    const stage = document.getElementById("stage");
+    const no = document.getElementById("noBtn");
+    const yes = document.getElementById("yesBtn");
+
+    let yesScale = 1;
+
+    function clamp(n, a, b) {
+      return Math.max(a, Math.min(b, n));
+    }
+
+    function randomTeleport() {
+      const rect = stage.getBoundingClientRect();
+
+      const randX = Math.random() * (rect.width - 100) + 50;
+      const randY = Math.random() * (rect.height - 100) + 50;
+
+      no.style.left = randX + "px";
+      no.style.top = randY + "px";
+      no.style.transform = "translate(-50%, -50%)";
+
+      yesScale = clamp(yesScale + 0.15, 1, 2.3);
+      yes.style.transform = `translate(-50%, -50%) scale(${yesScale})`;
+    }
+
+    no.addEventListener("click", (e) => {
+      e.stopPropagation();
+      randomTeleport();
+    });
+
+    yes.addEventListener("click", () => {
+      alert("Awww, you said YES 💖");
+    });
+
+    window.addEventListener("load", () => {
+      const rect = stage.getBoundingClientRect();
+      yes.style.left = rect.width * 0.5 + "px";
+      yes.style.top = rect.height * 0.6 + "px";
+      no.style.left = rect.width * 0.75 + "px";
+      no.style.top = rect.height * 0.35 + "px";
+    });
+  </script>
+</body>
+</html>
